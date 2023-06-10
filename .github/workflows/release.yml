@@ -1,0 +1,79 @@
+name: Release - Package app
+
+# Controls when the workflow will run
+on:
+  push:
+    paths:
+      - src/specs.json
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: get id
+        id: id
+        uses: notiz-dev/github-action-json-property@release
+        with: 
+          path: 'src/specs.json'
+          prop_path: 'id'
+
+      - name: get version
+        id: version
+        uses: notiz-dev/github-action-json-property@release
+        with: 
+          path: 'src/specs.json'
+          prop_path: 'version'
+
+      - name: zip src
+        uses: vimtor/action-zip@v1
+        with:
+          files: src/
+          dest: zipped.zip
+
+      - name: release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: ${{ steps.version.outputs.prop }}
+          tag_name: ${{ steps.version.outputs.prop }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: upload artifact
+        uses: actions/upload-release-asset@v1
+        id: upload_artifact
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: zipped.zip
+          asset_name: ${{ github.event.repository.name }}-${{ steps.version.outputs.prop }}.zip
+          asset_content_type: application/zip
+
+      - name: Generate SHA256 and PACKAGE_SOURCE
+        id: release_info
+        run: |
+          export SHA256=$(sha256sum zipped.zip | awk '{print $1}')
+          echo "::set-output name=SHA256::$SHA256"
+
+      - name: Air Repository Dispatch
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          repository: jpaarhuis/air
+          event-type: app-release
+          client-payload: '{ "id": "${{ steps.id.outputs.prop }}", "repository": "${{github.repository}}", "version": "${{ steps.version.outputs.prop }}", "package": "${{ steps.upload_artifact.outputs.browser_download_url }}", "sha256": "${{ steps.release_info.outputs.SHA256 }}"}'
+      
+        
+          
+          
+

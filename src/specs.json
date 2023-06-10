@@ -1,0 +1,7 @@
+{
+    "id": "posmn.trc.node" ,
+    "version" : "0.0.1+0.12.2",
+    "dependencies": [
+        { "id":"btc.base" }
+    ]
+}

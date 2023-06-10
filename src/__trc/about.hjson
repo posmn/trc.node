@@ -1,0 +1,10 @@
+{
+    "Description": '''
+Terracoin masternode'''
+    Links: [
+        { 
+            website: "https://terracoin.io/",
+            explorer: "https://chainz.cryptoid.info/trc/"
+        }
+    ]
+}
