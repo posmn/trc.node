@@ -1,0 +1,10 @@
+[Unit]
+Description=Run sentinel service every minute
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+Unit=sentinel.service
+
+[Install]
+WantedBy=timers.target

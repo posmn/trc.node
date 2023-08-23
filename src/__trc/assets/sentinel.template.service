@@ -1,0 +1,24 @@
+[Unit]
+Description={{{ID}}} sentinel service
+After=network.target
+StartLimitInterval=0
+
+[Service]
+User={{{USER}}}
+Group={{{USER}}}
+
+Type=simple
+
+WorkingDirectory={{{ROOT_DIR}}}/bin/sentinel
+Environment="HOME={{{ROOT_DIR}}}"
+Environment="SENTINEL_DEBUG=1"
+ExecStart={{{ROOT_DIR}}}/bin/sentinel/venv/bin/python {{{ROOT_DIR}}}/bin/sentinel/bin/sentinel.py
+StandardOutput=append:{{{ROOT_DIR}}}/data/sentinel.log
+StandardError=inherit
+
+{{#model.SERVICE_CONFIGURATION__ARRAY}}
+{{{key}}}={{{value}}}
+{{/model.SERVICE_CONFIGURATION__ARRAY}}
+
+[Install]
+WantedBy=default.target
