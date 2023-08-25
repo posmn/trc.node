@@ -31,6 +31,35 @@ local ok = os.execute(cmd)
 if not ok then
     ami_error("Failed to set up virtual environment and install requirements.")
 end
+
+-- patch sentinel lib/terracoin_config.py to collect host from rpcbind
+local numReplacements = 0
+local sentinelTerracoinConfigPy = fs.read_file("lib/terracoin_config.py")
+if not sentinelTerracoinConfigPy:find("# POSMN injected") then
+    sentinelTerracoinConfigPy, numReplacements = sentinelTerracoinConfigPy:gsub(
+        "rpc%(user|password|port%)=%(.-%)%$",
+        "rpc(user|password|port|bind)=(.*?)$"
+    )
+
+    ami_assert(numReplacements == 1, "Failed to patch sentinel lib/terracoin_config.py!")
+    local function injectCodeWithIndent(matchedIndent)
+        local injectCode = matchedIndent .. "if 'bind' in creds:" ..
+                        matchedIndent .. "    creds['host'] = creds.pop('bind') # POSMN injected \n"
+        return injectCode
+    end
+    sentinelTerracoinConfigPy, numReplacements = sentinelTerracoinConfigPy:gsub(
+        "(%s-)(creds%[u'port'%] = int%(creds%[u'port'%]%))",
+        function(indent, line)
+            return indent .. line .. injectCodeWithIndent(indent)
+        end
+    )
+    ami_assert(numReplacements == 1, "Failed to patch sentinel lib/terracoin_config.py!")
+    ami_assert(sentinelTerracoinConfigPy:find("# POSMN injected"), "Failed to patch sentinel lib/terracoin_config.py!")
+    ami_assert(sentinelTerracoinConfigPy:find("rpc%(user|password|port|bind%)"), "Failed to patch sentinel lib/terracoin_config.py!")
+
+    fs.write_file("lib/terracoin_config.py", sentinelTerracoinConfigPy)
+end
+
 os.chdir("../..")
 
 log_info("Configuring " .. am.app.get("id") .. " sentinel...")
