@@ -47,7 +47,7 @@ end
 
 os.chdir("../..")
 
-local sentinelConf = fs.read_file("__trc/assets/sentinel.template.conf")
+local sentinelConf = fs.read_file("__trc/assets/sentinel.conf")
 fs.write_file(SENTINEL_DIRECTORY.."/sentinel.conf", sentinelConf)
 
 log_info("Configuring " .. am.app.get("id") .. " sentinel...")
