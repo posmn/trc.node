@@ -36,7 +36,7 @@ end
 local numReplacements = 0
 local sentinelTerracoindPy = fs.read_file("lib/terracoind.py")
 if not sentinelTerracoindPy:find("# POSMN injected") then
-    sentinelTerracoindPy = sentinelTerracoindPy:gsub("host = kwargs%.get%('host', '127%.0%.0%.1'%)", "host = kwargs.get('host', '" .. am.app.get_configuration({ "DAEMON_CONFIGURATION", "rpcbind" }) .. "') # POSMN injected")
+    sentinelTerracoindPy, numReplacements = sentinelTerracoindPy:gsub("host = kwargs%.get%('host', '127%.0%.0%.1'%)", "host = kwargs.get('host', '" .. am.app.get_configuration({ "DAEMON_CONFIGURATION", "rpcbind" }) .. "') # POSMN injected")
 
     ami_assert(numReplacements == 1, "Failed to patch sentinel lib/terracoind.py!")
     ami_assert(sentinelTerracoindPy:find("# POSMN injected"), "Failed to patch sentinel lib/terracoind.py!")
