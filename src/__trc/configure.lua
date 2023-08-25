@@ -36,7 +36,9 @@ end
 local numReplacements = 0
 local sentinelTerracoindPy = fs.read_file("lib/terracoind.py")
 if not sentinelTerracoindPy:find("# POSMN injected") then
-    sentinelTerracoindPy, numReplacements = sentinelTerracoindPy:gsub("host = kwargs%.get%('host', '127%.0%.0%.1'%)", "host = kwargs.get('host', '[" .. am.app.get_configuration({ "DAEMON_CONFIGURATION", "rpcbind" }) .. "]') # POSMN injected")
+    local address = am.app.get_configuration({ "DAEMON_CONFIGURATION", "rpcbind" }, "127.0.0.1")
+    address = address:find(":") and "["..address.."]" or address
+    sentinelTerracoindPy, numReplacements = sentinelTerracoindPy:gsub("host = kwargs%.get%('host', '127%.0%.0%.1'%)", "host = kwargs.get('host', '" .. address .. "') # POSMN injected")
 
     ami_assert(numReplacements == 1, "Failed to patch sentinel lib/terracoind.py!")
     ami_assert(sentinelTerracoindPy:find("# POSMN injected"), "Failed to patch sentinel lib/terracoind.py!")
@@ -45,7 +47,7 @@ end
 
 os.chdir("../..")
 
-local sentinelConf = fs.read_file("__trc/assets/sentinel.conf")
+local sentinelConf = fs.read_file("__trc/assets/sentinel.template.conf")
 fs.write_file(SENTINEL_DIRECTORY.."/sentinel.conf", sentinelConf)
 
 log_info("Configuring " .. am.app.get("id") .. " sentinel...")
