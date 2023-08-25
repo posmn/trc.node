@@ -27,7 +27,7 @@ return {
 					am.execute_extension("__btc/configure.lua", { contextFailExitCode = EXIT_APP_CONFIGURE_ERROR })
 					am.execute_extension("__trc/configure.lua", { contextFailExitCode = EXIT_APP_CONFIGURE_ERROR })
 				end
-				log_success("glink node setup complete.")
+				log_success("trc node setup complete.")
 			end
 		},
         start = {
