@@ -12,9 +12,18 @@ ami_assert(
     EXIT_PLUGIN_EXEC_ERROR
 )
 
+local _ok, sentinelStatus, sentinelStarted = _systemctl.safe_get_service_status(_appId .. '-sentinel')
+ami_assert(
+    _ok,
+    'Failed to start ' .. _appId .. '-' .. _serviceName .. '.service ' .. (_status or ''),
+    EXIT_PLUGIN_EXEC_ERROR
+)
+
 local _info = {
     terracoind = _status,
+    sentinel = sentinelStatus,
     started = _started,
+    sentinelStarted = sentinelStarted,
     level = 'ok',
     synced = false,
     status = 'Terracoin node down',
