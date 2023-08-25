@@ -34,30 +34,13 @@ end
 
 -- patch sentinel lib/terracoin_config.py to collect host from rpcbind
 local numReplacements = 0
-local sentinelTerracoinConfigPy = fs.read_file("lib/terracoin_config.py")
-if not sentinelTerracoinConfigPy:find("# POSMN injected") then
-    sentinelTerracoinConfigPy, numReplacements = sentinelTerracoinConfigPy:gsub(
-        "rpc%(user|password|port%)=%(.-%)%$",
-        "rpc(user|password|port|bind)=(.*?)$"
-    )
+local sentinelTerracoindPy = fs.read_file("lib/terracoind.py")
+if not sentinelTerracoindPy:find("# POSMN injected") then
+    sentinelTerracoindPy = sentinelTerracoindPy:gsub("host = kwargs%.get%('host', '127%.0%.0%.1'%)", "host = kwargs.get('host', '" .. am.app.get_configuration({ "DAEMON_CONFIGURATION", "rpcbind" }) .. "') # POSMN injected")
 
-    ami_assert(numReplacements == 1, "Failed to patch sentinel lib/terracoin_config.py!")
-    local function injectCodeWithIndent(matchedIndent)
-        local injectCode = matchedIndent .. "if 'bind' in creds:" ..
-                        matchedIndent .. "    creds['host'] = creds.pop('bind') # POSMN injected \n"
-        return injectCode
-    end
-    sentinelTerracoinConfigPy, numReplacements = sentinelTerracoinConfigPy:gsub(
-        "(%s-)(creds%[u'port'%] = int%(creds%[u'port'%]%))",
-        function(indent, line)
-            return indent .. line .. injectCodeWithIndent(indent)
-        end
-    )
-    ami_assert(numReplacements == 1, "Failed to patch sentinel lib/terracoin_config.py!")
-    ami_assert(sentinelTerracoinConfigPy:find("# POSMN injected"), "Failed to patch sentinel lib/terracoin_config.py!")
-    ami_assert(sentinelTerracoinConfigPy:find("rpc%(user|password|port|bind%)"), "Failed to patch sentinel lib/terracoin_config.py!")
-
-    fs.write_file("lib/terracoin_config.py", sentinelTerracoinConfigPy)
+    ami_assert(numReplacements == 1, "Failed to patch sentinel lib/terracoind.py!")
+    ami_assert(sentinelTerracoindPy:find("# POSMN injected"), "Failed to patch sentinel lib/terracoind.py!")
+    fs.write_file("lib/terracoind.py", sentinelTerracoindPy)
 end
 
 os.chdir("../..")
